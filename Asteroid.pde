@@ -51,7 +51,7 @@ void update(int index) {
 // Removes a collided asteroid and spawns 2-3 smaller asteroids if
 // the removed asteroid is bigger than the smallest size.
 void explode(int index) {
-  if (asteroids.get(index).size > 1) {
+  if (asteroids.get(index).size > difficulty) {
     // Spawn multiple smaller asteroids
     for (int i = 0; i < round(random(2,3)); i++){
       asteroids.add(new Asteroid(new

@@ -11,18 +11,20 @@
 **************************************************************/
 
 // Game critical non-variables
-float maxSpeed;
-final float traction = 0.2;
-float shipHeading;
-float shipRotSpeed;
+final float traction = 0.15;
+final float defaultShipRotSpeed = 0.08;
+// How quickly should the ship rotation increase (usage 0 - 0.03)
+final float shipRotSpeedIncrease = 0.02;
 final int shipRadius = 15;
 final float brakeSpeed = 1.01;
-final int difficulty = 3; // 1 for hardest
+final int difficulty = 2; // Has to be between 1-3
 // The buffer between the text and sides of the window
 final int textXBuffer = 20, textYBuffer = 40;
 final int textSizeDefault = 25;
 final int asteroidSheetRowCount=12;
-final int startQuantity=8;
+final int startQuantity = 8;
+final int bulletSpeed = 5;
+final int bulletSize = 2;
 
 
 // Game critical variables
@@ -43,6 +45,10 @@ ArrayList<Asteroid> asteroids;
 ArrayList<Asteroid> debris;
 ArrayList<Bullet> bullets;
 ArrayList<PImage> ships=new ArrayList<PImage>();
+float shipHeading;
+float shipRotSpeed;
+float defaultSpeed;
+float speed;
 PImage aSheet; //Asteroid Texture Sheet
 PImage ship;
 PVector shipLoc;
@@ -54,12 +60,13 @@ PVector shipAccel;
 
 // Defines all variables and spawns asteroids
 void setup(){
-  size(1500,800);
+  size(1280,720);
   strokeWeight(5);
   textSize(textSizeDefault);
   fill(256, 256, 256);
   stroke(256, 256, 256);
   imageMode(CENTER);
+  //frameRate(60);
   smooth();
   currentShip = 0;
   shipLoc = new PVector(0,0);
@@ -67,14 +74,13 @@ void setup(){
   shipRot = new PVector(0,1);
   shipAccel = new PVector(0,0);
   shipHeading = 0;
+  shipLoc.x = width/2;
+  shipLoc.y = height-100;
+  defaultSpeed = 1.5;
   score = 0;
   level = 0;
   livesLeft = 3;
-  maxSpeed = 3;
   gameOver = false;
-  shipLoc.x = width/2;
-  shipLoc.y = height-100;
-  ship = loadImage("ships_void.png").get(0,384,31,47);
   asteroids = new ArrayList<Asteroid>();
   debris=new ArrayList<Asteroid>();
   bullets=new ArrayList<Bullet>();
@@ -94,8 +100,8 @@ void setup(){
 
 // Updates ship coordinates according to acceleration and heaading.
 void moveShip(){
-  shipRotSpeed = 0.1+currentShip*0.03;
-  maxSpeed = 3+currentShip;
+  shipRotSpeed = defaultShipRotSpeed+currentShip*shipRotSpeedIncrease;
+  speed = defaultSpeed+currentShip/2;
   shipHeading = shipRot.heading()+PI/2;
 
   // Ship control actions
@@ -132,7 +138,7 @@ void drawShip(){
   shipVel.div(brakeSpeed); // Slows down the ship
   tint(255, 255); // Keeps ship image opacity at full
   shipVel.add(shipAccel);
-  shipVel.limit(maxSpeed);
+  shipVel.limit(speed);
   shipLoc.add(shipVel);
   pushMatrix(); // Creating a matrix to render ship at a unique angle
   translate(shipLoc.x,shipLoc.y);
@@ -143,9 +149,15 @@ void drawShip(){
 }
 
 
-void drawShots(){
+void drawBullets(){
    //draw points for each shot from spacecraft
    //at location and updated to new location
+   // Removes bullets that left the window
+   for (int i = 0; i < bullets.size(); i++) {
+     Bullet bullet = bullets.get(i);
+     bullet.update(i);
+     bullet.display(i);
+   }
 }
 
 
@@ -302,7 +314,7 @@ void draw() {
   // draw ship - call shap(..) if Pshape
   // report if game over or won
   }
-  drawShots();
+  drawBullets();
   drawShip();
   drawAstroids();
   drawScore();
@@ -325,10 +337,11 @@ void keyPressed() {
       sLEFT=true;
     }
   }
-  if (key == BACKSPACE) {
+  if (key == 32) {
     //fire a shot
-    bullets.add(new Bullet(new PVector(shipLoc.x, shipLoc.y), new PVector(0.1,0.1),
-                shipLoc.x, shipLoc.y));
+    bullets.add(new Bullet(new PVector(shipLoc.x, shipLoc.y),
+    new PVector(bulletSpeed+currentShip,
+    bulletSpeed+currentShip).rotate(shipHeading+PI/4)));
   }
 }
 
